@@ -5,6 +5,11 @@ float getVoltage(int16_t value)
     return value * UFACTOR;
 }
 
+/**
+ * @brief getSensorValue Die Fktn. reduziert die ADC-Schwingung.
+ * @param value
+ * @return
+ */
 int8_t getSensorValue(int16_t value)
 {
     if(sensorValue - value > 1 || sensorValue - value < -1)

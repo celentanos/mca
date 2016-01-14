@@ -1,3 +1,5 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
@@ -37,6 +39,9 @@ void printCapacity(int value, int8_t line = 1)
 
 // MAIN ########################################################################
 
+OneWire oneWire(TEMP_SENSOR);          // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
+
 void setup()
 {
     lcd.init();                                 // initialize the lcd
@@ -49,6 +54,9 @@ void setup()
     // init LED-pin ------------------------------------------------------------
     pinMode(ledPin, OUTPUT);
     digitalWrite(ledPin, LOW);
+
+    // init Temp-Sensor --------------------------------------------------------
+    sensors.begin();    // Start up the library
 
     // init Charge-pin ---------------------------------------------------------
     pinMode(chargePin, OUTPUT);
@@ -115,11 +123,18 @@ void loop()
     case WATCH:
         if(!lcdPrintFlag) {
             delLine(0);
-            printLine(0, "charging");
+//            printLine(0, "charging");
             delLine(1);
             lcdPrintFlag++;
             digitalWrite(chargePin, HIGH);
         }
+        // TEMP_SENSOR ---------------------------------------------------------
+        sensors.requestTemperatures(); // Send the command to get temperatures
+        delLine(0);
+        printLine(0, "charging");
+        lcd.print(" T:");
+        lcd.print(sensors.getTempCByIndex(0));
+
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
             lcd.print("A7:");

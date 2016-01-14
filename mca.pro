@@ -12,4 +12,5 @@ DEPENDPATH +=
 HEADERS += \
     src/main/defines.h \
     src/main/functions.h \
-    src/main/main.ino
+    src/main/main.ino \
+    src/main/temp.h

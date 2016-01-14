@@ -1,14 +1,16 @@
 #include <stdint.h>
 
-#define H       0
-#define L       1
+#define H           0
+#define L           1
 
-#define RANGE   1024
-#define UREF    5.0
-#define UFACTOR UREF/RANGE
+#define RANGE       1024
+#define UREF        5.0
+#define UFACTOR     UREF/RANGE
+
+#define TEMP_SENSOR 5   // Data wire is plugged into port 5 on the Arduino
 
 const int8_t ledPin = 13;           // LED-pin-13
-const int8_t chargePin = 7;         // LED-pin-13
+const int8_t chargePin = 7;         //
 
 // -----------------------------------------------------------------------------
 int8_t lcdPrintFlag = 0;
