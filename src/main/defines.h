@@ -4,10 +4,11 @@
 #define L       1
 
 #define RANGE   1024
-#define UREF    4.85
+#define UREF    5.0
 #define UFACTOR UREF/RANGE
 
 const int8_t ledPin = 13;           // LED-pin-13
+const int8_t chargePin = 7;         // LED-pin-13
 
 // -----------------------------------------------------------------------------
 int8_t lcdPrintFlag = 0;

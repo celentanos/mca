@@ -40,6 +40,7 @@ void printCapacity(int value, int8_t line = 1)
 void setup()
 {
     lcd.init();                                 // initialize the lcd
+    lcd.setBacklight(1);
 
     pinMode(pin1.buttonPin = 2, INPUT_PULLUP);  // setup pin1
     pinMode(pin2.buttonPin = 3, INPUT_PULLUP);  // setup pin2
@@ -48,6 +49,10 @@ void setup()
     // init LED-pin ------------------------------------------------------------
     pinMode(ledPin, OUTPUT);
     digitalWrite(ledPin, LOW);
+
+    // init Charge-pin ---------------------------------------------------------
+    pinMode(chargePin, OUTPUT);
+    digitalWrite(chargePin, LOW);
 }
 
 void loop()
@@ -63,6 +68,7 @@ void loop()
             lcdPrintFlag++;
         }
         if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
             lcdPrintFlag = 0;
             state = PROCESS;
         }
@@ -87,17 +93,47 @@ void loop()
     case PROCESS:
         if(!lcdPrintFlag) {
             delLine(0);
+            printLine(0, "check values");
             delLine(1);
             lcdPrintFlag++;
         }
-
         if (getSensorValue(analogRead(A7))) {
-            delLine(0);
+            delLine(1);
             lcd.print("A7:");
             lcd.print(sensorValue);
 
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
+        }
+        if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
+            lcdPrintFlag = 0;
+            state = WATCH;
+            sensorValue = 0;
+        }
+        break;
+    case WATCH:
+        if(!lcdPrintFlag) {
+            delLine(0);
+            printLine(0, "charging");
+            delLine(1);
+            lcdPrintFlag++;
+            digitalWrite(chargePin, HIGH);
+        }
+        if (getSensorValue(analogRead(A7))) {
+            delLine(1);
+            lcd.print("A7:");
+            lcd.print(sensorValue);
+
+            lcd.print(" U:");
+            lcd.print(getVoltage(sensorValue));
+        }
+        if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
+            lcdPrintFlag = 0;
+            state = PROCESS;
+            sensorValue = 0;
+            digitalWrite(chargePin, LOW);
         }
         break;
     default:
