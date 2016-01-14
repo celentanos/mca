@@ -37,6 +37,16 @@ void printCapacity(int value, int8_t line = 1)
     lcd.print(s);
 }
 
+void printTempValue(const char *s)
+{
+    if(tempSensorOld != tempSensor){
+        tempSensorOld = tempSensor;
+        delLine(0);
+        lcd.print(s);
+        lcd.print(tempSensor);
+    }
+}
+
 // MAIN ########################################################################
 
 OneWire oneWire(TEMP_SENSOR);          // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
@@ -44,9 +54,15 @@ DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas 
 
 void setup()
 {
-    lcd.init();                                 // initialize the lcd
-    lcd.setBacklight(1);
+    // init Temp-Sensor --------------------------------------------------------
+    sensors.begin();                            // Start up the library
+    sensors.requestTemperatures();              // Send the command to get temperatures
 
+    // init LCD ----------------------------------------------------------------
+    lcd.init();                                 // initialize the lcd
+    lcd.setBacklight(0);
+
+    // init BUTTONS ------------------------------------------------------------
     pinMode(pin1.buttonPin = 2, INPUT_PULLUP);  // setup pin1
     pinMode(pin2.buttonPin = 3, INPUT_PULLUP);  // setup pin2
     pinMode(pin3.buttonPin = 4, INPUT_PULLUP);  // setup pin3
@@ -54,9 +70,6 @@ void setup()
     // init LED-pin ------------------------------------------------------------
     pinMode(ledPin, OUTPUT);
     digitalWrite(ledPin, LOW);
-
-    // init Temp-Sensor --------------------------------------------------------
-    sensors.begin();    // Start up the library
 
     // init Charge-pin ---------------------------------------------------------
     pinMode(chargePin, OUTPUT);
@@ -78,7 +91,7 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = PROCESS;
+            state = CHECK;
         }
         if(getPinState(pin2)) {
             pin2.buttonState = LOW;
@@ -98,10 +111,10 @@ void loop()
         }
         digitalWrite(ledPin, LOW);
         break;
-    case PROCESS:
+    case CHECK:
         if(!lcdPrintFlag) {
             delLine(0);
-            printLine(0, "check values");
+            printLine(0, "CHECK VALUES");
             delLine(1);
             lcdPrintFlag++;
         }
@@ -116,24 +129,29 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = WATCH;
+            state = CHARGING;
             sensorValue = 0;
         }
         break;
-    case WATCH:
+    case CHARGING:
         if(!lcdPrintFlag) {
             delLine(0);
-//            printLine(0, "charging");
             delLine(1);
             lcdPrintFlag++;
             digitalWrite(chargePin, HIGH);
+            tempSensorOld = 0;
         }
         // TEMP_SENSOR ---------------------------------------------------------
         sensors.requestTemperatures(); // Send the command to get temperatures
-        delLine(0);
-        printLine(0, "charging");
-        lcd.print(" T:");
-        lcd.print(sensors.getTempCByIndex(0));
+        tempSensor = sensors.getTempCByIndex(0);
+        printTempValue("CHARGING T:");
+
+        if(tempSensor > TEMP_CRITICAL) {
+            lcdPrintFlag = 0;
+            state = COOLING;
+            sensorValue = 0;
+            digitalWrite(chargePin, LOW);
+        }
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
@@ -146,9 +164,36 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = PROCESS;
+            state = CHECK;
             sensorValue = 0;
             digitalWrite(chargePin, LOW);
+        }
+        break;
+    case COOLING:
+        if(!lcdPrintFlag) {
+            delLine(0);
+            delLine(1);
+            lcdPrintFlag++;
+            tempSensorOld = 0;
+        }
+        // TEMP_SENSOR ---------------------------------------------------------
+        sensors.requestTemperatures(); // Send the command to get temperatures
+        tempSensor = sensors.getTempCByIndex(0);
+        printTempValue("COOLING T:");
+
+        if(tempSensor < TEMP_CRITICAL) {
+            lcdPrintFlag = 0;
+            state = CHARGING;
+            sensorValue = 0;
+        }
+
+        if (getSensorValue(analogRead(A7))) {
+            delLine(1);
+            lcd.print("A7:");
+            lcd.print(sensorValue);
+
+            lcd.print(" U:");
+            lcd.print(getVoltage(sensorValue));
         }
         break;
     default:

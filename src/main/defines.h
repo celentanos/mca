@@ -1,13 +1,17 @@
 #include <stdint.h>
 
-#define H           0
-#define L           1
+#define H               0
+#define L               1
 
-#define RANGE       1024
-#define UREF        5.0
-#define UFACTOR     UREF/RANGE
+#define RANGE           1024
+#define UREF            5.0
+#define UFACTOR         UREF/RANGE
 
-#define TEMP_SENSOR 5   // Data wire is plugged into port 5 on the Arduino
+#define TEMP_SENSOR     5   // Data wire is plugged into port 5 on the Arduino
+#define TEMP_CRITICAL   30.0
+
+float tempSensor = 0;
+float tempSensorOld = 0;
 
 const int8_t ledPin = 13;           // LED-pin-13
 const int8_t chargePin = 7;         //
@@ -35,18 +39,19 @@ struct pin {
 
 enum e_state {
     START,
-    PROCESS,
-    WATCH,
+    CHECK,
+    CHARGING,
+    COOLING,
     STOP
 } state = START;
 
 enum e_voltage {
-    V50 = 50,       // 3,85V = 770
-    V60 = 60,       // 3,92V = 784
-    V70 = 70,       // 3,99V = 798
-    V80 = 80,       // 4,06V = 812
-    V90 = 90,       // 4,13V = 826
-    V100 = 100      // 4,20V = 840
+    V50 = 50,       // 3,85V
+    V60 = 60,       // 3,92V
+    V70 = 70,       // 3,99V
+    V80 = 80,       // 4,06V
+    V90 = 90,       // 4,13V
+    V100 = 100      // 4,20V
 };
 
 struct voltage_type {
