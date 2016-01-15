@@ -46,15 +46,14 @@ enum e_state {
 } state = START;
 
 enum e_voltage {
-    V50 = 50,       // 3,85V
-    V60 = 60,       // 3,92V
-    V70 = 70,       // 3,99V
-    V80 = 80,       // 4,06V
-    V90 = 90,       // 4,13V
-    V100 = 100      // 4,20V
+    V60 = 60,       // 3,8V
+    V70 = 70,       // 3,9V
+    V75 = 75,       // 4,0V
+    V80 = 80,       // 4,1V
+    V85 = 85        // 4,2V
 };
 
 struct voltage_type {
-    e_voltage percent = V50;
-    int16_t value;
+    e_voltage percent = V60;    // das sind die %
+    int16_t value;              // das ist der Digit-Wert
 } voltage;

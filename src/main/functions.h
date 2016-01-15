@@ -38,26 +38,23 @@ int8_t getPinState(pin &pin)
 void incPercent()
 {
     switch (voltage.percent) {
-    case V50:
-        voltage.percent = V60;
-        break;
     case V60:
         voltage.percent = V70;
         break;
     case V70:
+        voltage.percent = V75;
+        break;
+    case V75:
         voltage.percent = V80;
         break;
     case V80:
-        voltage.percent = V90;
+        voltage.percent = V85;
         break;
-    case V90:
-        voltage.percent = V100;
-        break;
-    case V100:
-        voltage.percent = V50;
+    case V85:
+        voltage.percent = V60;
         break;
     default:
-        voltage.percent = V50;
+        voltage.percent = V60;
         break;
     }
 }
@@ -65,26 +62,23 @@ void incPercent()
 void decPercent()
 {
     switch (voltage.percent) {
-    case V50:
-        voltage.percent = V100;
-        break;
     case V60:
-        voltage.percent = V50;
+        voltage.percent = V85;
         break;
     case V70:
         voltage.percent = V60;
         break;
-    case V80:
+    case V75:
         voltage.percent = V70;
         break;
-    case V90:
+    case V80:
+        voltage.percent = V75;
+        break;
+    case V85:
         voltage.percent = V80;
         break;
-    case V100:
-        voltage.percent = V90;
-        break;
     default:
-        voltage.percent = V50;
+        voltage.percent = V60;
         break;
     }
 }
@@ -92,26 +86,23 @@ void decPercent()
 void setVoltage(e_voltage i)
 {
     switch (i) {
-    case V50:
-        voltage.value = 788;
-        break;
     case V60:
-        voltage.value = 803;
+        voltage.value = 778;
         break;
     case V70:
-        voltage.value = 817;
+        voltage.value = 799;
+        break;
+    case V75:
+        voltage.value = 819;
         break;
     case V80:
-        voltage.value = 831;
+        voltage.value = 840;
         break;
-    case V90:
-        voltage.value = 846;
-        break;
-    case V100:
+    case V85:
         voltage.value = 860;
         break;
     default:
-        voltage.value = 788;    // 50%
+        voltage.value = 778;    // 60%
         break;
     }
 }
