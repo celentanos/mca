@@ -39,7 +39,7 @@ void printCapacity(int value, int8_t line = 1)
 
 void printTempValue(const char *s)
 {
-    if(tempSensorOld != tempSensor){
+    if(tempSensorOld != tempSensor) {
         tempSensorOld = tempSensor;
         delLine(0);
         lcd.print(s);
@@ -153,6 +153,13 @@ void loop()
             digitalWrite(chargePin, LOW);
         }
 
+        if(analogRead(A7) >= voltage.value) {
+            lcdPrintFlag = 0;
+            state = WAITING;
+            sensorValue = 0;
+            digitalWrite(chargePin, LOW);
+        }
+
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
             lcd.print("A7:");
@@ -186,6 +193,27 @@ void loop()
             state = CHARGING;
             sensorValue = 0;
         }
+
+        if (getSensorValue(analogRead(A7))) {
+            delLine(1);
+            lcd.print("A7:");
+            lcd.print(sensorValue);
+
+            lcd.print(" U:");
+            lcd.print(getVoltage(sensorValue));
+        }
+        break;
+    case WAITING:
+        if(!lcdPrintFlag) {
+            delLine(0);
+            delLine(1);
+            lcdPrintFlag++;
+            tempSensorOld = 0;
+        }
+        // TEMP_SENSOR ---------------------------------------------------------
+        sensors.requestTemperatures(); // Send the command to get temperatures
+        tempSensor = sensors.getTempCByIndex(0);
+        printTempValue("WAITING T:");
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);

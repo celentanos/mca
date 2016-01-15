@@ -42,6 +42,7 @@ enum e_state {
     CHECK,
     CHARGING,
     COOLING,
+    WAITING,
     STOP
 } state = START;
 
