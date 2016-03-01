@@ -1,0 +1,1 @@
+- Es soll zwischen Strom- und Spannungsquelle geschaltet werden, um die Akku bis zu gewiessen Weise zu sätigen.

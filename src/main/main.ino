@@ -60,7 +60,7 @@ void setup()
 
     // init LCD ----------------------------------------------------------------
     lcd.init();                                 // initialize the lcd
-    lcd.setBacklight(0);
+    lcd.setBacklight(1);
 
     // init BUTTONS ------------------------------------------------------------
     pinMode(pin1.buttonPin = 2, INPUT_PULLUP);  // setup pin1
@@ -222,6 +222,12 @@ void loop()
 
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
+        }
+        if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
+            lcdPrintFlag = 0;
+            state = CHARGING;
+            sensorValue = 0;
         }
         break;
     default:
