@@ -2,6 +2,7 @@
 #include <DallasTemperature.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <RtcDS3231.h>
 
 #include "functions.h"
 
@@ -80,7 +81,7 @@ void loop()
 {
 
     switch (state) {
-    case START:
+    case BAT_CAPACITY:
         if(!lcdPrintFlag) {
             delLine(0);
             printLine(0, "charge capacity");
@@ -129,11 +130,11 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = CHARGING;
+            state = CHARG1;
             sensorValue = 0;
         }
         break;
-    case CHARGING:
+    case CHARG1:
         if(!lcdPrintFlag) {
             delLine(0);
             delLine(1);
@@ -190,7 +191,7 @@ void loop()
 
         if(tempSensor < TEMP_CRITICAL) {
             lcdPrintFlag = 0;
-            state = CHARGING;
+            state = CHARG1;
             sensorValue = 0;
         }
 
@@ -226,7 +227,7 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = CHARGING;
+            state = CHARG1;
             sensorValue = 0;
         }
         break;

@@ -7,14 +7,15 @@
 #define UREF            5.0
 #define UFACTOR         UREF/RANGE
 
-#define TEMP_SENSOR     5   // Data wire is plugged into port 5 on the Arduino
+#define TEMP_SENSOR     5           // Data wire is plugged into port 5 on the Arduino
 #define TEMP_CRITICAL   30.0
 
 float tempSensor = 0;
 float tempSensorOld = 0;
 
 const int8_t ledPin = 13;           // LED-pin-13
-const int8_t chargePin = 7;         //
+const int8_t chargePin = 7;         // Ladeschaltung aktivieren
+const int8_t chargePinMode = 8;     // Ladestrategie umschalten
 
 // -----------------------------------------------------------------------------
 int8_t lcdPrintFlag = 0;
@@ -38,13 +39,17 @@ struct pin {
 } pin1, pin2, pin3;
 
 enum e_state {
-    START,
+    RTC_TIME,
+    RTC_DATE,
+    BAT_CAPACITY,
     CHECK,
-    CHARGING,
+    CHARG1,
+    CHARG2,
+    CHARG3,
     COOLING,
     WAITING,
     STOP
-} state = START;
+} state = BAT_CAPACITY;
 
 enum e_voltage {
     V60 = 60,       // 3,8V
