@@ -1,12 +1,5 @@
 #include <stdint.h>
 
-#include <OneWire.h>
-#include <DallasTemperature.h>
-
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include <RtcDS3231.h>
-
 #define H               0
 #define L               1
 
@@ -16,33 +9,6 @@
 
 #define TEMP_SENSOR     5           // Data wire is plugged into port 5 on the Arduino
 #define TEMP_CRITICAL   30.0
-
-#define LINE_LENGTH     16
-#define DEFAULT_STRLEN  50
-
-// DEFINES #####################################################################
-
-LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
-RtcDS3231 Rtc;
-
-struct Date {
-    uint8_t day = 0;
-    uint8_t month = 0;
-    uint16_t year = 0;
-    uint8_t sec = 0;
-    uint8_t min = 0;
-    uint8_t hour = 0;
-} dateTime;
-
-OneWire oneWire(TEMP_SENSOR);           // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
-
-const uint8_t daysInMonth[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
-
-unsigned long currentMs = 0;
-uint8_t counter = 0;
-uint8_t line = 0;
-char runString[DEFAULT_STRLEN];
 
 float tempSensor = 0;
 float tempSensorOld = 0;
@@ -73,8 +39,8 @@ struct pin {
 } pin1, pin2, pin3;
 
 enum e_state {
-    RTC_DATE,
     RTC_TIME,
+    RTC_DATE,
     BAT_CAPACITY,
     CHECK,
     CHARG1,
@@ -84,15 +50,6 @@ enum e_state {
     WAITING,
     STOP
 } state = BAT_CAPACITY;
-
-enum e_date {
-    YEAR,
-    MONTH,
-    DAY,
-    SEC,
-    MIN,
-    HOUR
-} stateDateTime = YEAR;
 
 enum e_voltage {
     V60 = 60,       // 3,8V

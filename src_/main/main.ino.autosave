@@ -1,6 +1,57 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <RtcDS3231.h>
+
 #include "functions.h"
 
+// DEFINES #####################################################################
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+// FUNCTIONS ###################################################################
+
+void printLine(int8_t line, const char *s)
+{
+    lcd.setCursor(0, line);
+    lcd.print(s);
+}
+
+void delLine(int8_t line)
+{
+    lcd.setCursor(0, line);
+    lcd.print("                ");
+    lcd.setCursor(0, line);
+}
+
+void printCapacity(int value, int8_t line = 1)
+{
+    delLine(line);
+    char s[16] = "capacity: ";
+    char s1[4];
+    sprintf(s1, "%d", value);
+    strcat(s, s1);
+    strcat(s, "%");
+
+    lcd.setCursor(0, line);
+    lcd.print(s);
+}
+
+void printTempValue(const char *s)
+{
+    if(tempSensorOld != tempSensor) {
+        tempSensorOld = tempSensor;
+        delLine(0);
+        lcd.print(s);
+        lcd.print(tempSensor);
+    }
+}
+
 // MAIN ########################################################################
+
+OneWire oneWire(TEMP_SENSOR);          // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
 
 void setup()
 {
@@ -11,9 +62,6 @@ void setup()
     // init LCD ----------------------------------------------------------------
     lcd.init();                                 // initialize the lcd
     lcd.setBacklight(1);
-
-    // init RTC ----------------------------------------------------------------
-    Rtc.Begin();
 
     // init BUTTONS ------------------------------------------------------------
     pinMode(pin1.buttonPin = 2, INPUT_PULLUP);  // setup pin1
@@ -44,65 +92,25 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = RTC_DATE;
+            state = CHECK;
         }
         if(getPinState(pin2)) {
             pin2.buttonState = LOW;
             decPercent();
+            setVoltage(voltage.percent);
+            printCapacity(voltage.percent);
+
             digitalWrite(ledPin, HIGH);
         }
         if(getPinState(pin3)) {
             pin3.buttonState = LOW;
             incPercent();
+            setVoltage(voltage.percent);
+            printCapacity(voltage.percent);
+
             digitalWrite(ledPin, HIGH);
         }
-        setVoltage(voltage.percent);
-        printCapacity(voltage.percent);
         digitalWrite(ledPin, LOW);
-        break;
-    case RTC_DATE:
-        if(!lcdPrintFlag) {
-            delLine(0);
-            delLine(1);
-            if (!Rtc.IsDateTimeValid()) {
-                // Common Cuases:
-                //    1) first time you ran and the device wasn't running yet
-                //    2) the battery on the device is low or even missing
-
-                printLine(0, "RTC lost confidence in the DateTime!");
-
-                // following line sets the RTC to the date & time this sketch was compiled
-                // it will also reset the valid flag internally unless the Rtc device is
-                // having an issue
-            }
-            if (!Rtc.GetIsRunning()) {
-                Serial.println("RTC was not actively running, starting now");
-                Rtc.SetIsRunning(true);
-            }
-            RtcDateTime now = Rtc.GetDateTime();
-            char sDate[20];
-            printDate(sDate, sizeof(sDate) / sizeof(sDate[0]), now);
-            char sTemp[20];
-            strcpy(sTemp, "CURRENT DATE:");
-            strcpy(sTemp + strlen(sTemp), sDate);
-            setRunningPrint(0, sTemp);
-            printLine(0, sTemp);
-            lcdPrintFlag++;
-        }
-        switch (stateDateTime) {
-        case DAY:
-            if(getPinState(pin2)) {
-                pin2.buttonState = LOW;
-                dateTime.day++;
-            }
-            if(getPinState(pin3)) {
-                pin3.buttonState = LOW;
-                dateTime.day--;
-            }
-            break;
-        default:
-            break;
-        }
         break;
     case CHECK:
         if(!lcdPrintFlag) {
@@ -225,14 +233,5 @@ void loop()
         break;
     default:
         break;
-    }
-    if(millis() - currentMs > 750) {
-        currentMs = millis();
-        if(strlen(runString) > LINE_LENGTH) {
-            counter++;
-            if(counter + LINE_LENGTH > strlen(runString))
-                counter = 0;
-            printRunning(line, counter);
-        }
     }
 }
