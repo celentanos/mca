@@ -28,34 +28,46 @@ void printCapacity(int value, int8_t line = 1)
     lcd.print(s);
 }
 
-void printTempValue(const char *s)
+void printTempValue(const char *s, int8_t line = 0)
 {
     if(tempSensorOld != tempSensor) {
         tempSensorOld = tempSensor;
-        delLine(0);
+        delLine(line);
+        lcd.setCursor(0, line);
         lcd.print(s);
         lcd.print(tempSensor);
     }
 }
 
-void printDate(char *s, int8_t size, const RtcDateTime &dt)
+void printDate(char *s, int8_t pos, const RtcDateTime &dt)
 {
-    memset(s, 0, size);
-    sprintf(s, "%02u/%02u/%04u", dt.Day(), dt.Month(), dt.Year());
+    sprintf(s + pos, "%02u/%02u/%04u", dt.Day(), dt.Month(), dt.Year());
 }
 
-void printTime(char *s, int8_t size, const RtcDateTime &dt)
+void printTime(char *s, int8_t pos, const RtcDateTime &dt)
 {
-    memset(s, 0, size);
-    sprintf(s, "%02u:%02u:%02u", dt.Second(), dt.Minute(), dt.Hour());
+    sprintf(s + pos, "%02u:%02u", dt.Hour(), dt.Minute());
+}
+
+void printDateTime(char *s, int8_t pos, const RtcDateTime &dt)
+{
+    sprintf(s + pos, "%02u/%02u/%04u %02u:%02u", dt.Day(), dt.Month(), dt.Year(), dt.Hour(), dt.Minute());
 }
 
 void setRunningPrint(uint8_t lineNr, const char *s)
 {
     line = lineNr;
-    memset(runString, 0, sizeof(runString) / sizeof(runString[0]));
-    strcpy(runString, s);
+    counter = 0;
+    memset(runString, 0, DEFAULT_STRLEN);
+    if(s)
+        strcpy(runString, s);
 }
+
+//void resetRunning()
+//{
+//    memset(runString, 0, DEFAULT_STRLEN);
+//    counter = 0;
+//}
 
 void printRunning(int8_t line, uint8_t counter)
 {
@@ -63,25 +75,45 @@ void printRunning(int8_t line, uint8_t counter)
     lcd.print(runString + counter);
 }
 // -----------------------------------------------------------------------------
-void setDay(uint8_t month, uint8_t flag)
+uint32_t getMin()
 {
-    if(dateTime.day > daysInMonth[month])
-        dateTime.day = 0;
-    else {
-        if(flag)
-            dateTime.day++;
+    return 60;
+}
+
+uint32_t getHour()
+{
+    return getMin() * 60;
+}
+
+uint32_t getDay()
+{
+    return getHour() * 24;
+}
+
+uint32_t getMonth(RtcDateTime &dt, int8_t operation = 0)
+{
+    switch (operation) {
+    case -1:
+        if(dt.Month() == 1)
+            return daysInMonth[11] * getDay();
         else
-            dateTime.day--;
+            return daysInMonth[dt.Month() - 2] * getDay();
+        break;
+    case 1:
+        return daysInMonth[dt.Month() - 1] * getDay();
+        break;
+    default:
+        return getDay() * 30;
+        break;
     }
 }
 
-// -----------------------------------------------------------------------------
-
-float getVoltage(int16_t value)
+uint32_t getYear()
 {
-    return value * UFACTOR;
+    return getDay() * 365;
 }
 
+// -----------------------------------------------------------------------------
 /**
  * @brief getSensorValue Die Fktn. reduziert die ADC-Schwingung.
  * @param value
@@ -163,6 +195,9 @@ void decPercent()
 void setVoltage(e_voltage i)
 {
     switch (i) {
+    case V50:
+        voltage.value = 758;
+        break;
     case V60:
         voltage.value = 778;
         break;
@@ -184,3 +219,27 @@ void setVoltage(e_voltage i)
     }
 }
 
+float getVoltage(int16_t value)
+{
+    return value * UFACTOR;
+}
+
+float getVoltage(e_voltage i)
+{
+    switch (i) {
+    case V50:
+        return 758;
+    case V60:
+        return 778;
+    case V70:
+        return 799;
+    case V75:
+        return 819;
+    case V80:
+        return 840;
+    case V85:
+        return 860;
+    default:
+        return 0;
+    }
+}

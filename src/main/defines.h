@@ -20,24 +20,33 @@
 #define LINE_LENGTH     16
 #define DEFAULT_STRLEN  50
 
+#define S_CHARGE_CAP    "charge capacity"
+#define S_CURRENT_DATE  "CURRENT DATE "
+#define S_CURRENT_TIME  "CURRENT TIME "
+#define S_SET_Y         "SET Y:"
+#define S_SET_M         "SET M:"
+#define S_SET_D         "SET D:"
+#define S_SET_H         "SET HOUR "
+#define S_YES_NO        "YES           NO"
+#define S_SET_DATE_Y    "SET DATE: YEAR"
+#define S_SET_DATE_M    "SET DATE: MONTH"
+#define S_SET_DATE_D    "SET DATE: DAY"
+#define S_SET_DATE_H    "SET TIME: HOUR"
+#define S_SET_DATE_MIN  "SET TIME: MINUTE"
+
 // DEFINES #####################################################################
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
-RtcDS3231 Rtc;
 
-struct Date {
-    uint8_t day = 0;
-    uint8_t month = 0;
-    uint16_t year = 0;
-    uint8_t sec = 0;
-    uint8_t min = 0;
-    uint8_t hour = 0;
-} dateTime;
+RtcDS3231 Rtc;
+RtcDateTime now;    /// Hilfsvariable
+RtcDateTime now2;   /// gesetzte Zeit
+RtcDateTime now_temp;
 
 OneWire oneWire(TEMP_SENSOR);           // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
 
-const uint8_t daysInMonth[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+const uint8_t daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 unsigned long currentMs = 0;
 uint8_t counter = 0;
@@ -70,31 +79,32 @@ struct pin {
     long lastDebounceTime = 0;      // the last time the output pin was toggled
     long debounceDelay = 50;        // the debounce time; increase if the output flickers
     int8_t reading;
-} pin1, pin2, pin3;
+} pin1, pin2, pin3, pin4;
 
 enum e_state {
     RTC_DATE,
-    RTC_TIME,
+    RTC_SET,
     BAT_CAPACITY,
-    CHECK,
-    CHARG1,
-    CHARG2,
-    CHARG3,
+    BAT_CHECK,
+    CHARGE1,        /// Aufbewahrung
+    CHARGE2,        /// Aufladen
+    CHARGE3,        /// Aufladen voll
     COOLING,
     WAITING,
     STOP
 } state = BAT_CAPACITY;
 
 enum e_date {
-    YEAR,
-    MONTH,
-    DAY,
-    SEC,
-    MIN,
-    HOUR
-} stateDateTime = YEAR;
+    DATE_YEAR,
+    DATE_MONTH,
+    DATE_DAY,
+    DATE_HOUR,
+    DATE_MIN,
+    DATE_CHECK
+} stateDateTime = DATE_YEAR;
 
 enum e_voltage {
+    V50 = 50,       // 3,7V
     V60 = 60,       // 3,8V
     V70 = 70,       // 3,9V
     V75 = 75,       // 4,0V
