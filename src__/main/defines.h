@@ -11,37 +11,30 @@
 #define L               1
 
 #define RANGE           1024
-#define UREF            5.02
+#define UREF            5.0
 #define UFACTOR         UREF/RANGE
 
-#define TEMP_SENSOR     6           // Data wire is plugged into port 6 on the Arduino
+#define TEMP_SENSOR     5           // Data wire is plugged into port 5 on the Arduino
 #define TEMP_CRITICAL   30.0
 
 #define LINE_LENGTH     16
 #define DEFAULT_STRLEN  50
-
-#define S_CHARGE_CAP    "charge capacity"
-#define S_CURRENT_DATE  "CURRENT DATE "
-#define S_CURRENT_TIME  "CURRENT TIME "
-#define S_SET_Y         "SET Y:"
-#define S_SET_M         "SET M:"
-#define S_SET_D         "SET D:"
-#define S_SET_H         "SET HOUR "
-#define S_YES_NO        "YES           NO"
-#define S_SET_DATE_Y    "SET DATE: YEAR"
-#define S_SET_DATE_M    "SET DATE: MONTH"
-#define S_SET_DATE_D    "SET DATE: DAY"
-#define S_SET_DATE_H    "SET TIME: HOUR"
-#define S_SET_DATE_MIN  "SET TIME: MINUTE"
 
 // DEFINES #####################################################################
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 RtcDS3231 Rtc;
-RtcDateTime now;    /// Hilfsvariable
-RtcDateTime now2;   /// gesetzte Zeit
-RtcDateTime now_temp;
+RtcDateTime now;
+
+struct DateTime {
+    uint8_t day = 0;
+    uint8_t month = 0;
+    uint16_t year = 0;
+    uint8_t min = 0;
+    uint8_t min_temp = 0;
+    uint8_t hour = 0;
+} dateTime;
 
 OneWire oneWire(TEMP_SENSOR);           // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
@@ -79,13 +72,14 @@ struct pin {
     long lastDebounceTime = 0;      // the last time the output pin was toggled
     long debounceDelay = 50;        // the debounce time; increase if the output flickers
     int8_t reading;
-} pin1, pin2, pin3, pin4;
+} pin1, pin2, pin3;
 
 enum e_state {
     RTC_DATE,
-    RTC_SET,
+    RTC_TIME,
+    RTC_CHECK,
     BAT_CAPACITY,
-    BAT_CHECK,
+    CHECK,
     CHARGE1,        /// Aufbewahrung
     CHARGE2,        /// Aufladen
     CHARGE3,        /// Aufladen voll
@@ -95,13 +89,12 @@ enum e_state {
 } state = BAT_CAPACITY;
 
 enum e_date {
-    DATE_YEAR,
-    DATE_MONTH,
-    DATE_DAY,
-    DATE_HOUR,
-    DATE_MIN,
-    DATE_CHECK
-} stateDateTime = DATE_YEAR;
+    YEAR,
+    MONTH,
+    DAY,
+    MIN,
+    HOUR
+} stateDateTime = YEAR;
 
 enum e_voltage {
     V50 = 50,       // 3,7V

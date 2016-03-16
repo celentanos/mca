@@ -25,6 +25,8 @@ void setup()
     // init Charge-pin ---------------------------------------------------------
     pinMode(chargePin, OUTPUT);
     digitalWrite(chargePin, LOW);
+    pinMode(chargePinMode, OUTPUT);
+    digitalWrite(chargePinMode, HIGH);
 
     // init RTC ----------------------------------------------------------------
     Rtc.Begin();
@@ -468,15 +470,19 @@ void loop()
         }
         // Aufbewahrung
         if(analogRead(A7) < getVoltage(V50)) {
+            printLine(0, "CHARGE1 Aufbewahrung");
             digitalWrite(chargePin, HIGH);
-            digitalWrite(chargePinMode, LOW);
+            digitalWrite(chargePinMode, HIGH);
         }
+        // Pause
         if(analogRead(A7) >= getVoltage(V60)) {
+            printLine(0, "CHARGE1 Pause");
             digitalWrite(chargePin, LOW);
-            digitalWrite(chargePinMode, LOW);
+            digitalWrite(chargePinMode, HIGH);
         }
         // CHARGE2
-        if(now2.TotalSeconds() + getDay() < now.TotalSeconds()) {
+        if(now2.TotalSeconds() < now.TotalSeconds() + getDay()) {
+            delay(1000);
             lcdPrintFlag = 0;
             state = CHARGE2;
         }
@@ -487,28 +493,14 @@ void loop()
             printLine(0, "CHARGE2");
             delLine(1);
             lcdPrintFlag++;
-            digitalWrite(chargePin, HIGH);
-            digitalWrite(chargePinMode, HIGH);
             tempSensorOld = 0;
+            digitalWrite(chargePin, HIGH);
+            digitalWrite(chargePinMode, LOW);
         }
         // TEMP_SENSOR ---------------------------------------------------------
         sensors.requestTemperatures();  // Send the command to get temperatures
         tempSensor = sensors.getTempCByIndex(0);
         printTempValue("CHARGING T:");
-
-        if(tempSensor > TEMP_CRITICAL) {
-            lcdPrintFlag = 0;
-            state = COOLING;
-            sensorValue = 0;
-            digitalWrite(chargePin, LOW);
-        }
-
-        if(analogRead(A7) >= voltage.value) {
-            lcdPrintFlag = 0;
-            state = CHARGE3;
-            sensorValue = 0;
-            digitalWrite(chargePin, LOW);
-        }
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
@@ -517,11 +509,22 @@ void loop()
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
+        if(tempSensor > TEMP_CRITICAL) {
+            lcdPrintFlag = 0;
+            state = COOLING;
+            sensorValue = 0;
+        }
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
             state = BAT_CHECK;
             sensorValue = 0;
+        }
+        if(analogRead(A7) >= voltage.value) {
+            delay(1000);
+            lcdPrintFlag = 0;
+            sensorValue = 0;
+            state = CHARGE3;
         }
         break;
     case COOLING:
@@ -530,17 +533,12 @@ void loop()
             delLine(1);
             lcdPrintFlag++;
             tempSensorOld = 0;
+            digitalWrite(chargePin, LOW);
         }
         // TEMP_SENSOR ---------------------------------------------------------
         sensors.requestTemperatures();  // Send the command to get temperatures
         tempSensor = sensors.getTempCByIndex(0);
         printTempValue("COOLING T:");
-
-        if(tempSensor < TEMP_CRITICAL) {
-            lcdPrintFlag = 0;
-            state = CHARGE2;
-            sensorValue = 0;
-        }
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
@@ -550,20 +548,21 @@ void loop()
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
+        if(tempSensor < TEMP_CRITICAL) {
+            lcdPrintFlag = 0;
+            state = CHARGE2;
+            sensorValue = 0;
+        }
         break;
     case CHARGE3:
         if(!lcdPrintFlag) {
             delLine(0);
+            printLine(0, "CHARGE3");
             delLine(1);
             lcdPrintFlag++;
             tempSensorOld = 0;
             digitalWrite(chargePin, HIGH);
-            digitalWrite(chargePinMode, LOW);
-        }
-        if(analogRead(A7) >= voltage.value) {
-            lcdPrintFlag = 0;
-            sensorValue = 0;
-            state = WAITING;
+            digitalWrite(chargePinMode, HIGH);
         }
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
@@ -577,6 +576,12 @@ void loop()
             lcdPrintFlag = 0;
             state = BAT_CHECK;
             sensorValue = 0;
+        }
+        if(analogRead(A7) >= voltage.value) {
+            delay(1000);
+//            lcdPrintFlag = 0;
+//            sensorValue = 0;
+//            state = WAITING;    // TODO: WAITING
         }
         break;
     case WAITING:
