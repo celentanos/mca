@@ -69,7 +69,7 @@ void setRunningPrint(uint8_t lineNr, const char *s)
 //    counter = 0;
 //}
 
-void printRunning(int8_t line, uint8_t counter)
+void printRunning(uint8_t line, uint8_t counter)
 {
     lcd.setCursor(0, line);
     lcd.print(runString + counter);

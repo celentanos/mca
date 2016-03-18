@@ -428,8 +428,6 @@ void loop()
                 stateDateTime = DATE_YEAR;
             }
             break;
-        default:
-            break;
         }
         break;
     case BAT_CHECK:
@@ -615,8 +613,6 @@ void loop()
             state = CHARGE1;
             sensorValue = 0;
         }
-        break;
-    default:
         break;
     }
     if(millis() - currentMs > 750) {

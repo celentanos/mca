@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include <Arduino.h>
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -36,34 +38,34 @@
 
 // DEFINES #####################################################################
 
-LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
+static LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-RtcDS3231 Rtc;
-RtcDateTime now;    /// Hilfsvariable
-RtcDateTime now2;   /// gesetzte Zeit
-RtcDateTime now_temp;
+static RtcDS3231 Rtc;
+static RtcDateTime now;     /// Hilfsvariable
+static RtcDateTime now2;    /// gesetzte Zeit
+static RtcDateTime now_temp;
 
-OneWire oneWire(TEMP_SENSOR);           // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
+static OneWire oneWire(TEMP_SENSOR);           // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+static DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
 
 const uint8_t daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-unsigned long currentMs = 0;
-uint8_t counter = 0;
-uint8_t line = 0;
-char runString[DEFAULT_STRLEN];
+static unsigned long currentMs = 0;
+static uint8_t counter = 0;
+static uint8_t line = 0;
+static char runString[DEFAULT_STRLEN];
 
-float tempSensor = 0;
-float tempSensorOld = 0;
+static float tempSensor = 0;
+static float tempSensorOld = 0;
 
 const int8_t ledPin = 13;           // LED-pin-13
 const int8_t chargePin = 7;         // Ladeschaltung aktivieren
 const int8_t chargePinMode = 8;     // Ladestrategie umschalten
 
 // -----------------------------------------------------------------------------
-int8_t lcdPrintFlag = 0;
+static int8_t lcdPrintFlag = 0;
 
-int16_t sensorValue = 0;
+static int16_t sensorValue = 0;
 
 /**
  * @brief The pin struct
@@ -72,7 +74,7 @@ int16_t sensorValue = 0;
  * - pin2 = '-'
  * - pin3 = '+'
  */
-struct pin {
+static struct pin {
     int8_t buttonPin;               // the number of the pushbutton pin
     int8_t buttonState = 0;         // the current reading from the input pin
     int8_t lastButtonState = LOW;   // the previous reading from the input pin
@@ -81,7 +83,7 @@ struct pin {
     int8_t reading;
 } pin1, pin2, pin3, pin4;
 
-enum e_state {
+static enum e_state {
     RTC_DATE,
     RTC_SET,
     BAT_CAPACITY,
@@ -90,11 +92,10 @@ enum e_state {
     CHARGE2,        /// Aufladen
     CHARGE3,        /// Aufladen voll
     COOLING,
-    WAITING,
-    STOP
+    WAITING
 } state = BAT_CAPACITY;
 
-enum e_date {
+static enum e_date {
     DATE_YEAR,
     DATE_MONTH,
     DATE_DAY,
@@ -112,7 +113,7 @@ enum e_voltage {
     V85 = 85        // 4,2V
 };
 
-struct voltage_type {
+static struct voltage_type {
     e_voltage percent = V60;    // das sind die %
     int16_t value;              // das ist der Digit-Wert
 } voltage;
