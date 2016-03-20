@@ -41,9 +41,10 @@
 static LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 static RtcDS3231 Rtc;
-static RtcDateTime now;     /// Hilfsvariable
-static RtcDateTime now2;    /// gesetzte Zeit
+static RtcDateTime now;         /// Hilfsvariable
 static RtcDateTime now_temp;
+static RtcDateTime timeMy;      /// gesetzte Zeit
+static uint8_t timeFlag = 1;    /// wenn die zeit einmal gesetzt wurde
 
 static OneWire oneWire(TEMP_SENSOR);           // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 static DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to Dallas Temperature.
@@ -87,12 +88,14 @@ static enum e_state {
     RTC_DATE,
     RTC_SET,
     BAT_CAPACITY,
-    BAT_CHECK,
-    CHARGE1,        /// Aufbewahrung
-    CHARGE2,        /// Aufladen
-    CHARGE3,        /// Aufladen voll
+    BAT_LOW_VOLTAGE,    /// die Akku ist zu tief entladen
+    BAT_NO_BAT,         /// keine Akku eingesetzt
+    BAT_CHECK,          /// hier werden nur die Werte angezeigt
+    CHARGE1,            /// Aufbewahrung
+    CHARGE2,            /// Aufladen
+    CHARGE3,            /// Aufladen voll
     COOLING,
-    WAITING
+    WAITING             /// Aufgeladen
 } state = BAT_CAPACITY;
 
 static enum e_date {
@@ -105,12 +108,14 @@ static enum e_date {
 } stateDateTime = DATE_YEAR;
 
 enum e_voltage {
-    V50 = 50,       // 3,7V
-    V60 = 60,       // 3,8V
-    V70 = 70,       // 3,9V
-    V75 = 75,       // 4,0V
-    V80 = 80,       // 4,1V
-    V85 = 85        // 4,2V
+    VLOW,           /// 3,0V
+    V50 = 50,       /// 3,7V
+    V60 = 60,       /// 3,8V
+    V70 = 70,       /// 3,9V
+    V75 = 75,       /// 4,0V
+    V80 = 80,       /// 4,1V
+    V85 = 85,       /// 4,2V
+    VHIGH           /// > 4,3V
 };
 
 static struct voltage_type {

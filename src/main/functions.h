@@ -192,54 +192,79 @@ void decPercent()
     }
 }
 
-void setVoltage(e_voltage i)
+void setVDigits(e_voltage i)
 {
+    double f;
     switch (i) {
     case V50:
-        voltage.value = 758;
+        f = 3.7;
         break;
     case V60:
-        voltage.value = 778;
+        f = 3.8;
         break;
     case V70:
-        voltage.value = 799;
+        f = 3.9;
         break;
     case V75:
-        voltage.value = 819;
+        f = 4.0;
         break;
     case V80:
-        voltage.value = 840;
+        f = 4.1;
         break;
     case V85:
-        voltage.value = 860;
+        f = 4.2;
         break;
     default:
-        voltage.value = 778;    // 60%
+        f = 3.8;        // 60%
         break;
     }
+    f /= UFACTOR;
+    voltage.value = f;
 }
 
-float getVoltage(int16_t value)
+double getVDigits(e_voltage i)
+{
+    double f;
+    switch (i) {
+    case VLOW:
+        f = 3.0;
+        break;
+    case V50:
+        f = 3.7;
+        break;
+    case V60:
+        f = 3.8;
+        break;
+    case V70:
+        f = 3.9;
+        break;
+    case V75:
+        f = 4.0;
+        break;
+    case V80:
+        f = 4.1;
+        break;
+    case V85:
+        f = 4.2;
+        break;
+    case VHIGH:
+        f = 4.3;
+    }
+    f /= UFACTOR;
+    return f;
+}
+
+double getVoltage(int16_t value)
 {
     return value * UFACTOR;
 }
 
-float getVoltage(e_voltage i)
+uint8_t checkBatPresence()
 {
-    switch (i) {
-    case V50:
-        return 758;
-    case V60:
-        return 778;
-    case V70:
-        return 799;
-    case V75:
-        return 819;
-    case V80:
-        return 840;
-    case V85:
-        return 860;
-    default:
-        return 0;
+    if(analogRead(A7) > getVDigits(VHIGH)) {
+        lcdPrintFlag = 0;
+        state = BAT_NO_BAT;
+        return 1;
     }
+    return 0;
 }

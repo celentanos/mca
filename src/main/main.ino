@@ -24,7 +24,7 @@ void setup()
 
     // init Charge-pin ---------------------------------------------------------
     pinMode(chargePin, OUTPUT);
-    digitalWrite(chargePin, LOW);
+    digitalWrite(chargePin, HIGH);
     pinMode(chargePinMode, OUTPUT);
     digitalWrite(chargePinMode, HIGH);
 
@@ -42,6 +42,9 @@ void setup()
         Serial.println("RTC was not actively running, starting now");
         Rtc.SetIsRunning(true);
     }
+
+    // Serial ------------------------------------------------------------------
+    Serial.begin(9600);
 }
 
 void loop()
@@ -49,34 +52,70 @@ void loop()
 
     switch (state) {
     case BAT_CAPACITY:
+        // tief antladen -------------------------------------------------------
+        if(analogRead(A7) <= getVDigits(VLOW)) {
+            lcdPrintFlag = 0;
+            state = BAT_LOW_VOLTAGE;
+        }
+        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+            break;
         if(!lcdPrintFlag) {
             delLine(0);
             printLine(0, S_CHARGE_CAP);
             printCapacity(voltage.percent);
-            setVoltage(voltage.percent);
+            setVDigits(voltage.percent);
             lcdPrintFlag++;
-        }
-        if(getPinState(pin1)) {
-            pin1.buttonState = LOW;
-            lcdPrintFlag = 0;
-            state = RTC_DATE;
-            stateDateTime = DATE_YEAR;
         }
         if(getPinState(pin2)) {
             pin2.buttonState = LOW;
             decPercent();
             digitalWrite(ledPin, HIGH);
-            setVoltage(voltage.percent);
+            setVDigits(voltage.percent);
             printCapacity(voltage.percent);
         }
         if(getPinState(pin3)) {
             pin3.buttonState = LOW;
             incPercent();
             digitalWrite(ledPin, HIGH);
-            setVoltage(voltage.percent);
+            setVDigits(voltage.percent);
             printCapacity(voltage.percent);
         }
+        if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
+            lcdPrintFlag = 0;
+            digitalWrite(chargePin, LOW);
+            state = RTC_DATE;
+            stateDateTime = DATE_YEAR;
+        }
         digitalWrite(ledPin, LOW);
+        break;
+    case BAT_LOW_VOLTAGE:
+        if(!lcdPrintFlag) {
+            delLine(0);
+            printLine(0, "LOW BAT VOLTAGE");
+            delLine(1);
+            printLine(1, "REPLACE BAT & OK");
+            lcdPrintFlag++;
+        }
+        if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
+            lcdPrintFlag = 0;
+            state = BAT_CAPACITY;
+        }
+        break;
+    case BAT_NO_BAT:
+        if(!lcdPrintFlag) {
+            delLine(0);
+            printLine(0, "NO BAT DETECTED");
+            delLine(1);
+            printLine(1, "PLACE BAT & OK");
+            lcdPrintFlag++;
+        }
+        if(getPinState(pin1)) {
+            pin1.buttonState = LOW;
+            lcdPrintFlag = 0;
+            state = BAT_CAPACITY;
+        }
         break;
     case RTC_DATE:
         switch (stateDateTime) {
@@ -87,7 +126,10 @@ void loop()
 
                 now = Rtc.GetDateTime();
                 // init dateTime struct
-                now2 = now;
+                if(timeFlag) {
+                    timeMy = now;
+                    timeFlag = 0;
+                }
 
                 // print current dateTime
                 char sTemp[20];
@@ -97,33 +139,33 @@ void loop()
                 printLine(0, sTemp);
                 memset(sTemp, 0, strlen(sTemp));
                 strcpy(sTemp, S_SET_Y);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
                 lcdPrintFlag++;
             }
             if(getPinState(pin2)) {
                 pin2.buttonState = LOW;
                 now = Rtc.GetDateTime();
-                if(now2.Year() > now.Year())
-                    now2 -= getYear();
+                if(timeMy.Year() > now.Year())
+                    timeMy -= getYear();
                 char sTemp[20];
                 strcpy(sTemp, S_SET_Y);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin3)) {
                 pin3.buttonState = LOW;
-                now2 += getYear();
+                timeMy += getYear();
                 char sTemp[20];
                 strcpy(sTemp, S_SET_Y);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin1)) {
                 pin1.buttonState = LOW;
                 char sTemp[20];
                 strcpy(sTemp, S_SET_M);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
                 stateDateTime = DATE_MONTH;
             }
@@ -131,26 +173,26 @@ void loop()
         case DATE_MONTH:
             if(getPinState(pin2)) {
                 pin2.buttonState = LOW;
-                if(now2.TotalSeconds() + getHour() > now.TotalSeconds() + getMonth(now, 1))
-                    now2 -= getMonth(now2, -1);
+                if(timeMy.TotalSeconds() + getHour() > now.TotalSeconds() + getMonth(now, 1))
+                    timeMy -= getMonth(timeMy, -1);
                 char sTemp[20];
                 strcpy(sTemp, S_SET_M);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin3)) {
                 pin3.buttonState = LOW;
-                now2 += getMonth(now2, 1);
+                timeMy += getMonth(timeMy, 1);
                 char sTemp[20];
                 strcpy(sTemp, S_SET_M);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin1)) {
                 pin1.buttonState = LOW;
                 char sTemp[20];
                 strcpy(sTemp, S_SET_D);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
                 stateDateTime = DATE_DAY;
             }
@@ -158,19 +200,19 @@ void loop()
         case DATE_DAY:
             if(getPinState(pin2)) {
                 pin2.buttonState = LOW;
-                if(now2.TotalSeconds() + getMin() > now.TotalSeconds() + getDay())
-                    now2 -= getDay();
+                if(timeMy.TotalSeconds() + getMin() > now.TotalSeconds() + getDay())
+                    timeMy -= getDay();
                 char sTemp[20];
                 strcpy(sTemp, S_SET_D);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin3)) {
                 pin3.buttonState = LOW;
-                now2 += getDay();
+                timeMy += getDay();
                 char sTemp[20];
                 strcpy(sTemp, S_SET_D);
-                printDate(sTemp, strlen(sTemp), now2);
+                printDate(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin1)) {
@@ -196,7 +238,7 @@ void loop()
                 printLine(0, sTemp);
                 memset(sTemp, 0, DEFAULT_STRLEN);
                 strcpy(sTemp, S_SET_H);
-                printTime(sTemp, strlen(sTemp), now2);
+                printTime(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
 
                 lcdPrintFlag++;
@@ -204,16 +246,16 @@ void loop()
             // Stunde aktualisieren --------------------------------------------
             if(now_temp.TotalSeconds() + getHour() < now.TotalSeconds()) {
                 now_temp += getHour();
-                now2 += getHour();
+                timeMy += getHour();
                 char sTemp[DEFAULT_STRLEN];
                 strcpy(sTemp, S_SET_H);
-                printTime(sTemp, strlen(sTemp), now2);
+                printTime(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             // Minute aktualisieren --------------------------------------------
             if(now_temp.TotalSeconds() + getMin() < now.TotalSeconds()) {
                 now_temp += getMin();
-                now2 += getMin();
+                timeMy += getMin();
                 setRunningPrint(0, 0);
                 char sTemp[DEFAULT_STRLEN];
                 strcpy(sTemp, S_CURRENT_TIME);
@@ -223,19 +265,19 @@ void loop()
             }
             if(getPinState(pin2)) {
                 pin2.buttonState = LOW;
-                if(now2.TotalSeconds() + getMin() > now.TotalSeconds() + getHour())
-                    now2 -= getHour();
+                if(timeMy.TotalSeconds() + getMin() > now.TotalSeconds() + getHour())
+                    timeMy -= getHour();
                 char sTemp[20];
                 strcpy(sTemp, S_SET_H);
-                printTime(sTemp, strlen(sTemp), now2);
+                printTime(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin3)) {
                 pin3.buttonState = LOW;
-                now2 += getHour();
+                timeMy += getHour();
                 char sTemp[20];
                 strcpy(sTemp, S_SET_H);
-                printTime(sTemp, strlen(sTemp), now2);
+                printTime(sTemp, strlen(sTemp), timeMy);
                 printLine(1, sTemp);
             }
             if(getPinState(pin1)) {
@@ -251,7 +293,7 @@ void loop()
                 delLine(1);
 
                 char sTemp[20];
-                printDateTime(sTemp, 0, now2);
+                printDateTime(sTemp, 0, timeMy);
                 printLine(0, sTemp);
                 printLine(1, S_YES_NO);
                 lcdPrintFlag++;
@@ -452,6 +494,8 @@ void loop()
         }
         break;
     case CHARGE1:
+        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+            break;
         now = Rtc.GetDateTime();
         if(!lcdPrintFlag) {
             delLine(0);
@@ -467,25 +511,27 @@ void loop()
             lcd.print(getVoltage(sensorValue));
         }
         // Aufbewahrung
-        if(analogRead(A7) < getVoltage(V50)) {
+        if(analogRead(A7) < getVDigits(V50)) {
             printLine(0, "CHARGE1 Aufbewahrung");
             digitalWrite(chargePin, HIGH);
             digitalWrite(chargePinMode, HIGH);
         }
         // Pause
-        if(analogRead(A7) >= getVoltage(V60)) {
+        if(analogRead(A7) >= getVDigits(V60)) {
             printLine(0, "CHARGE1 Pause");
             digitalWrite(chargePin, LOW);
             digitalWrite(chargePinMode, HIGH);
         }
         // CHARGE2
-        if(now2.TotalSeconds() < now.TotalSeconds() + getDay()) {
+        if(timeMy.TotalSeconds() < now.TotalSeconds() + getDay()) {
             delay(1000);
             lcdPrintFlag = 0;
             state = CHARGE2;
         }
         break;
     case CHARGE2:
+        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+            break;
         if(!lcdPrintFlag) {
             delLine(0);
             printLine(0, "CHARGE2");
@@ -526,6 +572,8 @@ void loop()
         }
         break;
     case COOLING:
+        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+            break;
         if(!lcdPrintFlag) {
             delLine(0);
             delLine(1);
@@ -553,6 +601,8 @@ void loop()
         }
         break;
     case CHARGE3:
+        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+            break;
         if(!lcdPrintFlag) {
             delLine(0);
             printLine(0, "CHARGE3");
@@ -583,6 +633,7 @@ void loop()
         }
         break;
     case WAITING:
+        checkBatPresence(); // kein Akku eingesetzt ----------------------------
         if(!lcdPrintFlag) {
             delLine(0);
             delLine(1);
@@ -591,7 +642,7 @@ void loop()
             digitalWrite(chargePin, LOW);
         }
         // Aufbewahrung
-        if(analogRead(A7) < getVoltage(V50)) {
+        if(analogRead(A7) < getVDigits(V50)) {
             lcdPrintFlag = 0;
             state = CHARGE1;
         }
