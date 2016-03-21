@@ -1,4 +1,6 @@
 .gitignore~
 .~*
-/build*
-/src_*
+build*
+src_*
+*pro.user*
+
