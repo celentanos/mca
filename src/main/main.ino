@@ -45,26 +45,36 @@ void setup()
 
     // Serial ------------------------------------------------------------------
     Serial.begin(9600);
+
+    // other -------------------------------------------------------------------
+
 }
 
 void loop()
 {
-
     switch (state) {
     case BAT_CAPACITY:
-        // tief antladen -------------------------------------------------------
-        if(analogRead(A7) <= getVDigits(VLOW)) {
-            lcdPrintFlag = 0;
-            state = BAT_LOW_VOLTAGE;
-        }
-        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
-            break;
         if(!lcdPrintFlag) {
             delLine(0);
             printLine(0, S_CHARGE_CAP);
             printCapacity(voltage.percent);
             setVDigits(voltage.percent);
             lcdPrintFlag++;
+
+            flagBatCheck = 1;
+            msBatCheck = millis();
+        }
+        // tief antladen -------------------------------------------------------
+        if(analogRead(A7) <= getVDigits(VLOW)) {
+            lcdPrintFlag = 0;
+            state = BAT_LOW_VOLTAGE;
+        }
+        if(millis() - msBatCheck > 1000 && flagBatCheck) {
+            flagBatCheck = 0;
+            uint8_t flag = checkBatPresence();
+            digitalWrite(chargePin, LOW);
+            if(flag) // kein Akku eingesetzt -------------------------
+                break;
         }
         if(getPinState(pin2)) {
             pin2.buttonState = LOW;
@@ -83,7 +93,6 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            digitalWrite(chargePin, LOW);
             state = RTC_DATE;
             stateDateTime = DATE_YEAR;
         }
@@ -114,6 +123,7 @@ void loop()
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
+            digitalWrite(chargePin, HIGH);
             state = BAT_CAPACITY;
         }
         break;
@@ -301,7 +311,11 @@ void loop()
             if(getPinState(pin1)) {
                 pin1.buttonState = LOW;
                 lcdPrintFlag = 0;
+#ifdef DEBUG_VERSION
                 state = BAT_CHECK;
+#else
+                state = CHARGE1;
+#endif
             }
             if(getPinState(pin3)) {
                 pin3.buttonState = LOW;
@@ -478,19 +492,29 @@ void loop()
             printLine(0, "CHECK VALUES");
             delLine(1);
             lcdPrintFlag++;
+            digitalWrite(chargePin, LOW);
+            digitalWrite(chargePinMode, HIGH);
         }
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
-            lcd.print("A7:");
+            lcd.print("ADC:");
             lcd.print(sensorValue);
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
+#ifdef DEBUG_VERSION
         if(getPinState(pin1)) {
             pin1.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = CHARGE1;
             sensorValue = 0;
+            state = CHARGE1;
+        }
+#endif
+        if(getPinState(pin4)) {
+            pin4.buttonState = LOW;
+            lcdPrintFlag = 0;
+            sensorValue = 0;
+            state = stateLast;
         }
         break;
     case CHARGE1:
@@ -505,7 +529,7 @@ void loop()
         }
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
-            lcd.print("A7:");
+            lcd.print("ADC:");
             lcd.print(sensorValue);
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
@@ -521,6 +545,13 @@ void loop()
             printLine(0, "CHARGE1 Pause");
             digitalWrite(chargePin, LOW);
             digitalWrite(chargePinMode, HIGH);
+        }
+        if(getPinState(pin4)) { // BAT_CHECK -----------------------------------
+            pin4.buttonState = LOW;
+            lcdPrintFlag = 0;
+            sensorValue = 0;
+            stateLast = CHARGE1;
+            state = BAT_CHECK;
         }
         // CHARGE2
         if(timeMy.TotalSeconds() < now.TotalSeconds() + getDay()) {
@@ -548,7 +579,7 @@ void loop()
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
-            lcd.print("A7:");
+            lcd.print("ADC:");
             lcd.print(sensorValue);
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
@@ -558,11 +589,12 @@ void loop()
             state = COOLING;
             sensorValue = 0;
         }
-        if(getPinState(pin1)) {
-            pin1.buttonState = LOW;
+        if(getPinState(pin4)) { // BAT_CHECK -----------------------------------
+            pin4.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = BAT_CHECK;
             sensorValue = 0;
+            stateLast = CHARGE2;
+            state = BAT_CHECK;
         }
         if(analogRead(A7) >= voltage.value) {
             delay(1000);
@@ -588,7 +620,7 @@ void loop()
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
-            lcd.print("A7:");
+            lcd.print("ADC:");
             lcd.print(sensorValue);
 
             lcd.print(" U:");
@@ -614,16 +646,17 @@ void loop()
         }
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
-            lcd.print("A7:");
+            lcd.print("ADC:");
             lcd.print(sensorValue);
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
-        if(getPinState(pin1)) {
-            pin1.buttonState = LOW;
+        if(getPinState(pin4)) { // BAT_CHECK -----------------------------------
+            pin4.buttonState = LOW;
             lcdPrintFlag = 0;
-            state = BAT_CHECK;
             sensorValue = 0;
+            stateLast = CHARGE3;
+            state = BAT_CHECK;
         }
         if(analogRead(A7) >= voltage.value) {
             delay(1000);
@@ -653,7 +686,7 @@ void loop()
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
-            lcd.print("A7:");
+            lcd.print("ADC:");
             lcd.print(sensorValue);
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
@@ -666,8 +699,8 @@ void loop()
         }
         break;
     }
-    if(millis() - currentMs > 750) {
-        currentMs = millis();
+    if(millis() - msPrint > 750) {
+        msPrint = millis();
         if(strlen(runString) > LINE_LENGTH) {
             counter++;
             if(counter + LINE_LENGTH > strlen(runString))

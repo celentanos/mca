@@ -9,6 +9,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <RtcDS3231.h>
 
+#define DEBUG_VERSION
+
 #define H               0
 #define L               1
 
@@ -21,6 +23,15 @@
 
 #define LINE_LENGTH     16
 #define DEFAULT_STRLEN  50
+
+#define PLOW            3.0
+#define P50             3.7
+#define P60             3.8
+#define P70             3.9
+#define P75             4.0
+#define P80             4.1
+#define P85             4.2
+#define PHIGH           4.3
 
 #define S_CHARGE_CAP    "charge capacity"
 #define S_CURRENT_DATE  "CURRENT DATE "
@@ -51,7 +62,10 @@ static DallasTemperature sensors(&oneWire);    // Pass our oneWire reference to 
 
 const uint8_t daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-static unsigned long currentMs = 0;
+static unsigned long msBatCheck = 0;
+static uint8_t flagBatCheck = 1;
+
+static unsigned long msPrint = 0;
 static uint8_t counter = 0;
 static uint8_t line = 0;
 static char runString[DEFAULT_STRLEN];
@@ -96,7 +110,7 @@ static enum e_state {
     CHARGE3,            /// Aufladen voll
     COOLING,
     WAITING             /// Aufgeladen
-} state = BAT_CAPACITY;
+} state = BAT_CAPACITY, stateLast;
 
 static enum e_date {
     DATE_YEAR,

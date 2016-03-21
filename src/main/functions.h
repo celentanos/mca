@@ -197,25 +197,25 @@ void setVDigits(e_voltage i)
     double f;
     switch (i) {
     case V50:
-        f = 3.7;
+        f = P50;
         break;
     case V60:
-        f = 3.8;
+        f = P60;
         break;
     case V70:
-        f = 3.9;
+        f = P70;
         break;
     case V75:
-        f = 4.0;
+        f = P75;
         break;
     case V80:
-        f = 4.1;
+        f = P80;
         break;
     case V85:
-        f = 4.2;
+        f = P85;
         break;
     default:
-        f = 3.8;        // 60%
+        f = P60;        // 60%
         break;
     }
     f /= UFACTOR;
@@ -227,28 +227,28 @@ double getVDigits(e_voltage i)
     double f;
     switch (i) {
     case VLOW:
-        f = 3.0;
+        f = PLOW;
         break;
     case V50:
-        f = 3.7;
+        f = P50;
         break;
     case V60:
-        f = 3.8;
+        f = P60;
         break;
     case V70:
-        f = 3.9;
+        f = P70;
         break;
     case V75:
-        f = 4.0;
+        f = P75;
         break;
     case V80:
-        f = 4.1;
+        f = P80;
         break;
     case V85:
-        f = 4.2;
+        f = P85;
         break;
     case VHIGH:
-        f = 4.3;
+        f = PHIGH;
     }
     f /= UFACTOR;
     return f;
@@ -264,6 +264,12 @@ uint8_t checkBatPresence()
     if(analogRead(A7) > getVDigits(VHIGH)) {
         lcdPrintFlag = 0;
         state = BAT_NO_BAT;
+
+        digitalWrite(chargePin, LOW);
+        digitalWrite(chargePinMode, HIGH);
+#ifdef DEBUG_VERSION
+        Serial.println("-> BAT_NO_BAT");
+#endif
         return 1;
     }
     return 0;
