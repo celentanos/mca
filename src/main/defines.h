@@ -27,9 +27,9 @@
 #define PLOW            3.0
 #define P50             3.7
 #define P60             3.8
-#define P70             3.9
-#define P75             4.0
-#define P80             4.1
+#define P70             3.915   //3.9
+#define P75             3.973   //4.0
+#define P80             4.087   //4.1
 #define P85             4.2
 #define PHIGH           4.3
 

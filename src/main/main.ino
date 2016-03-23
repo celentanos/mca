@@ -530,8 +530,14 @@ void loop()
         }
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
+#ifdef DEBUG_VERSION
             lcd.print("ADC:");
             lcd.print(sensorValue);
+#else
+            lcd.print("STATE:");
+            lcd.print(getPersent(sensorValue));
+            lcd.print('%');
+#endif
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
@@ -580,8 +586,14 @@ void loop()
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
+#ifdef DEBUG_VERSION
             lcd.print("ADC:");
             lcd.print(sensorValue);
+#else
+            lcd.print("STATE:");
+            lcd.print(getPersent(sensorValue));
+            lcd.print('%');
+#endif
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
@@ -621,9 +633,14 @@ void loop()
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
+#ifdef DEBUG_VERSION
             lcd.print("ADC:");
             lcd.print(sensorValue);
-
+#else
+            lcd.print("STATE:");
+            lcd.print(getPersent(sensorValue));
+            lcd.print('%');
+#endif
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
@@ -647,8 +664,14 @@ void loop()
         }
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
+#ifdef DEBUG_VERSION
             lcd.print("ADC:");
             lcd.print(sensorValue);
+#else
+            lcd.print("STATE:");
+            lcd.print(getPersent(sensorValue));
+            lcd.print('%');
+#endif
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }
@@ -688,8 +711,14 @@ void loop()
 
         if (getSensorValue(analogRead(A7))) {
             delLine(1);
+#ifdef DEBUG_VERSION
             lcd.print("ADC:");
             lcd.print(sensorValue);
+#else
+            lcd.print("STATE:");
+            lcd.print(getPersent(sensorValue));
+            lcd.print('%');
+#endif
             lcd.print(" U:");
             lcd.print(getVoltage(sensorValue));
         }

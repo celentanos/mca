@@ -259,6 +259,11 @@ double getVoltage(int16_t value)
     return value * UFACTOR;
 }
 
+int16_t getPersent(int16_t value)
+{
+    return -265.5 + (87 * getVoltage(value));
+}
+
 uint8_t isNoBat(uint8_t chargeOn)
 {
     if(analogRead(A7) > getVDigits(VHIGH)) {
