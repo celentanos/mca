@@ -9,7 +9,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <RtcDS3231.h>
 
-#define DEBUG_VERSION
+//#define DEBUG_VERSION
 
 #define H               0
 #define L               1
@@ -123,13 +123,13 @@ static enum e_date {
 
 enum e_voltage {
     VLOW,           /// 3,0V
-    V50 = 50,       /// 3,7V
-    V60 = 60,       /// 3,8V
-    V70 = 70,       /// 3,9V
-    V75 = 75,       /// 4,0V
-    V80 = 80,       /// 4,1V
-    V85 = 85,       /// 4,2V
-    VHIGH           /// > 4,3V
+    V50 = 50,       /// 3,7V    50
+    V60 = 65,       /// 3,8V    60
+    V70 = 75,       /// 3,9V    70
+    V75 = 80,       /// 4,0V    75
+    V80 = 90,       /// 4,1V    80
+    V85 = 100,      /// 4,2V    85
+    VHIGH           /// >= 4,3V
 };
 
 static struct voltage_type {

@@ -121,7 +121,7 @@ uint32_t getYear()
  */
 int8_t getSensorValue(int16_t value)
 {
-    if(sensorValue - value > 1 || sensorValue - value < -1)
+    if(sensorValue - value > 0 || sensorValue - value < -1)
         sensorValue = value;
     else
         return 0;
@@ -259,14 +259,12 @@ double getVoltage(int16_t value)
     return value * UFACTOR;
 }
 
-uint8_t checkBatPresence(uint8_t chargeOn)
+uint8_t isNoBat(uint8_t chargeOn)
 {
     if(analogRead(A7) > getVDigits(VHIGH)) {
         lcdPrintFlag = 0;
         state = BAT_NO_BAT;
 
-        digitalWrite(chargePin, LOW);
-        digitalWrite(chargePinMode, HIGH);
 #ifdef DEBUG_VERSION
         Serial.println("-> BAT_NO_BAT");
 #endif
@@ -274,6 +272,8 @@ uint8_t checkBatPresence(uint8_t chargeOn)
             digitalWrite(chargePin, HIGH);
         else
             digitalWrite(chargePin, LOW);
+        digitalWrite(chargePinMode, HIGH);
+
         return 1;
     }
     return 0;

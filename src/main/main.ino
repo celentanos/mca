@@ -71,8 +71,8 @@ void loop()
         }
         if(millis() - msBatCheck > 1000 && flagBatCheck) {
             flagBatCheck = 0;
-            uint8_t flag = checkBatPresence(0);
-//            digitalWrite(chargePin, LOW);
+            uint8_t flag = isNoBat(0);
+            digitalWrite(chargePin, LOW);   // nach timeout wieder auf LOW
             if(flag) // kein Akku eingesetzt -----------------------------------
                 break;
         }
@@ -519,12 +519,12 @@ void loop()
         }
         break;
     case CHARGE1:
-        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+        if(isNoBat(0)) // kein Akku eingesetzt -------------------------
             break;
         now = Rtc.GetDateTime();
         if(!lcdPrintFlag) {
             delLine(0);
-            printLine(0, "CHARGE1");
+            printLine(0, "SAVING");
             delLine(1);
             lcdPrintFlag++;
         }
@@ -537,13 +537,13 @@ void loop()
         }
         // Aufbewahrung
         if(analogRead(A7) < getVDigits(V50)) {
-            printLine(0, "CHARGE1 Aufbewahrung");
+            printLine(0, "SAVING Run");
             digitalWrite(chargePin, HIGH);
             digitalWrite(chargePinMode, HIGH);
         }
         // Pause
         if(analogRead(A7) >= getVDigits(V60)) {
-            printLine(0, "CHARGE1 Pause");
+            printLine(0, "SAVING Pause");
             digitalWrite(chargePin, LOW);
             digitalWrite(chargePinMode, HIGH);
         }
@@ -562,11 +562,11 @@ void loop()
         }
         break;
     case CHARGE2:
-        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+        if(isNoBat(0)) // kein Akku eingesetzt -------------------------
             break;
         if(!lcdPrintFlag) {
             delLine(0);
-            printLine(0, "CHARGE2");
+            printLine(0, "CHARGING");
             delLine(1);
             lcdPrintFlag++;
             tempSensorOld = 0;
@@ -605,7 +605,7 @@ void loop()
         }
         break;
     case COOLING:
-        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+        if(isNoBat(0)) // kein Akku eingesetzt -------------------------
             break;
         if(!lcdPrintFlag) {
             delLine(0);
@@ -634,11 +634,11 @@ void loop()
         }
         break;
     case CHARGE3:
-        if(checkBatPresence()) // kein Akku eingesetzt -------------------------
+        if(isNoBat(0)) // kein Akku eingesetzt -------------------------
             break;
         if(!lcdPrintFlag) {
             delLine(0);
-            printLine(0, "CHARGE3");
+            printLine(0, "CHARGING 2");
             delLine(1);
             lcdPrintFlag++;
             tempSensorOld = 0;
@@ -661,13 +661,14 @@ void loop()
         }
         if(analogRead(A7) >= voltage.value) {
             delay(1000);
-//            lcdPrintFlag = 0;
-//            sensorValue = 0;
-//            state = WAITING;    // TODO: WAITING
+            lcdPrintFlag = 0;
+            sensorValue = 0;
+            state = WAITING;    // TODO: WAITING
         }
         break;
     case WAITING:
-        checkBatPresence(); // kein Akku eingesetzt ----------------------------
+        if(isNoBat(0)) // kein Akku eingesetzt -------------------------
+            break;
         if(!lcdPrintFlag) {
             delLine(0);
             delLine(1);
