@@ -71,9 +71,9 @@ void loop()
         }
         if(millis() - msBatCheck > 1000 && flagBatCheck) {
             flagBatCheck = 0;
-            uint8_t flag = checkBatPresence();
-            digitalWrite(chargePin, LOW);
-            if(flag) // kein Akku eingesetzt -------------------------
+            uint8_t flag = checkBatPresence(0);
+//            digitalWrite(chargePin, LOW);
+            if(flag) // kein Akku eingesetzt -----------------------------------
                 break;
         }
         if(getPinState(pin2)) {
@@ -476,6 +476,7 @@ void loop()
                 lcdPrintFlag = 0;
                 state = RTC_DATE;
                 stateDateTime = DATE_YEAR;
+                Rtc.SetDateTime(now);
             }
             if(getPinState(pin3)) {
                 pin3.buttonState = LOW;

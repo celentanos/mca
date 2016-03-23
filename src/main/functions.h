@@ -259,7 +259,7 @@ double getVoltage(int16_t value)
     return value * UFACTOR;
 }
 
-uint8_t checkBatPresence()
+uint8_t checkBatPresence(uint8_t chargeOn)
 {
     if(analogRead(A7) > getVDigits(VHIGH)) {
         lcdPrintFlag = 0;
@@ -270,6 +270,10 @@ uint8_t checkBatPresence()
 #ifdef DEBUG_VERSION
         Serial.println("-> BAT_NO_BAT");
 #endif
+        if(chargeOn)
+            digitalWrite(chargePin, HIGH);
+        else
+            digitalWrite(chargePin, LOW);
         return 1;
     }
     return 0;
