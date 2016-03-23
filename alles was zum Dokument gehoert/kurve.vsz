@@ -1,0 +1,40 @@
+# Veusz saved document (version 1.15)
+# Saved at 2016-03-23T13:41:19.978566
+
+AddImportPath(u'/home/celentano/Arduino/mca.git/alles was zum Dokument gehoert')
+ImportString(u'P(numeric)','''
+6.500000e+01
+7.500000e+01
+8.000000e+01
+9.000000e+01
+1.000000e+02
+''')
+ImportString(u'V(numeric)','''
+3.800000e+00
+3.900000e+00
+4.000000e+00
+4.100000e+00
+4.200000e+00
+''')
+Add('page', name='page1', autoadd=False)
+To('page1')
+Add('graph', name='graph1', autoadd=False)
+To('graph1')
+Add('axis', name='x', autoadd=False)
+Add('axis', name='y', autoadd=False)
+To('y')
+Set('direction', 'vertical')
+To('..')
+Add('fit', name='fit1', autoadd=False)
+To('fit1')
+Set('values', {u'a': -265.5, u'b': 87.0})
+Set('xData', u'V')
+Set('yData', u'P')
+To('..')
+Add('xy', name='xy1', autoadd=False)
+To('xy1')
+Set('xData', u'V')
+Set('yData', u'P')
+To('..')
+To('..')
+To('..')
